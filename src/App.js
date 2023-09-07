@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import "./App.css";
 import UserInputForm from "./UserInputForm";
-import { fetchUserData, fetchUserRepositories } from "./GitHubAPI";
+import {
+  fetchUserData,
+  fetchUserRepositories,
+  fetchRepositoryCommits,
+} from "./GitHubAPI";
 
 function App() {
   // Definirea stării pentru datele utilizatorului 1, datele utilizatorului 2, repository-urile utilizatorului 1 și repository-urile utilizatorului 2
@@ -10,8 +14,11 @@ function App() {
   const [userRepos1, setUserRepos1] = useState([]);
   const [userRepos2, setUserRepos2] = useState([]);
   const [error, setError] = useState(null);
+  const currentDate = new Date();
+  const threeMonthsAgo = new Date(currentDate);
+  threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
 
-  // Funcție pentru a căuta informații despre un utilizator GitHub și a afișa repository-urile și numărul de stargazers
+  // Funcție pentru a căuta informații despre un utilizator GitHub și a afișa repository-urile și numărul de commit-uri
   async function searchUserInfo(username, setUserFunc, setReposFunc) {
     try {
       // Obținerea datelor utilizatorului
@@ -21,7 +28,20 @@ function App() {
 
       // Actualizarea stării cu datele utilizatorului și repository-urile
       setUserFunc(user);
-      setReposFunc(repos);
+
+      // Calcularea numărului de commit-uri pentru fiecare repository în ultimele 3 luni
+      const repoCommitsPromises = repos.map(async (repo) => {
+        const commits = await fetchRepositoryCommits(username, repo.name);
+        const recentCommits = commits.filter((commit) => {
+          const commitDate = new Date(commit.commit.author.date);
+          return commitDate >= threeMonthsAgo;
+        });
+        return { ...repo, recentCommits: recentCommits.length };
+      });
+
+      const reposWithCommits = await Promise.all(repoCommitsPromises);
+      setReposFunc(reposWithCommits);
+
       setError(null); // Resetarea mesajelor de eroare
     } catch (error) {
       console.error("Eroare la căutarea utilizatorului:", error);
@@ -63,7 +83,8 @@ function App() {
                 {userRepos1.map((repo) => (
                   <li key={repo.id}>
                     {repo.name} - Stargazers: {repo.stargazers_count}, Forks:{" "}
-                    {repo.forks}
+                    {repo.forks}, Commits from the last 3 months:{" "}
+                    {repo.recentCommits}
                   </li>
                 ))}
               </ul>
@@ -78,7 +99,8 @@ function App() {
                 {userRepos2.map((repo) => (
                   <li key={repo.id}>
                     {repo.name} - Stargazers: {repo.stargazers_count}, Forks:{" "}
-                    {repo.forks}
+                    {repo.forks}, Commits from the last 3 months:{" "}
+                    {repo.recentCommits}
                   </li>
                 ))}
               </ul>
