@@ -1,10 +1,13 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+// Importam React și ReactDOM necesare pentru a crea și randa aplicația
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css"; // Importam stilurile pentru aplicație, dacă există
+import App from "./App"; // Importam componenta App pe care dorim să o randam
+import reportWebVitals from "./reportWebVitals"; // Importam funcția de raportare a performanței web
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+// Randăm componenta <App /> în interiorul unui StrictMode pentru a detecta probleme potențiale
 root.render(
   <React.StrictMode>
     <App />
